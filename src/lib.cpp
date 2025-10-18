@@ -15,8 +15,11 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle)
 	PHANDLE = handle;
 
 	if (__hyprland_api_get_hash() != std::string_view(GIT_COMMIT_HASH)) {
-		debug_notification(
-		    "Failure in initialization: Version mismatch (headers ver != running ver)"
+		HyprlandAPI::addNotification(
+		    PHANDLE,
+		    "[focusorlaunch] Failure in initialization: Version mismatch (headers ver != running ver)",
+		    CHyprColor{1.0, 0.2, 0.2, 1.0},
+		    5000
 		);
 		throw std::runtime_error("[focusorlaunch] version mismatch");
 	}
@@ -65,12 +68,15 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle)
 	}
 	if (!success) {
 		HyprlandAPI::addNotification(
-		    PHANDLE, "Failed to register dispatchers", CHyprColor{1.0, 0.2, 0.2, 1.0}, 5000
+		    PHANDLE,
+		    "[focusorlaunch] Failed to register dispatchers",
+		    CHyprColor{1.0, 0.2, 0.2, 1.0},
+		    5000
 		);
-		throw std::runtime_error("Failed to register dispatchers");
+		throw std::runtime_error("[focusorlaunch] Failed to register dispatchers");
 	}
 
-	HyprlandAPI::addNotification(PHANDLE, "Initialized", CHyprColor{0.2, 1.0, 0.2, 1.0}, 2500);
+	debug_notification("Initialized");
 
 	return {
 	    "focusorlaunch", "A dispatcher to focus or launch an app.", "Aditya Singh", "0.1"

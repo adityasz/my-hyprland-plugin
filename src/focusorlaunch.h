@@ -86,7 +86,7 @@ static void debug_notification(std::string_view fmt_string, Args &&...fmt_args)
 #ifdef DEBUG
 	HyprlandAPI::addNotification(
 		PHANDLE,
-		std::vformat(fmt_string, std::make_format_args(fmt_args...)),
+		std::format("[focusorlaunch] {}", std::vformat(fmt_string, std::make_format_args(fmt_args...))),
 		CHyprColor{1.0, 0.2, 0.2, 1.0},
 		5000
 	);
