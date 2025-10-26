@@ -3,18 +3,18 @@
 #### Installation
 
 Hyprland headers need to be installed. See
-[`CMakeLists.txt`](https://github.com/adityasz/focusorlaunch/blob/master/CMakeLists.txt)
+[`CMakeLists.txt`](https://github.com/adityasz/myplugin/blob/master/CMakeLists.txt)
 for the full list of dependencies.
 
 ```console
 $ cmake -B build/release -S . -GNinja -DCMAKE_BUILD_TYPE=Release
 $ cmake --build build/release
-$ hyprctl plugin load $(realpath build/release/libfocusorlaunch.so)
+$ hyprctl plugin load $(realpath build/release/libmyplugin.so)
 ```
 
 ```hyprlang
 plugin {
-    focusorlaunch {
+    myplugin {
         app_1 {
             class = kitty
             command = kitty
@@ -26,6 +26,6 @@ plugin {
     }
 }
 
-bind = SUPER, 1, plugin:focusorlaunch:1
-bind = SUPER, 2, plugin:focusorlaunch:2
+bind = SUPER, 1, myplugin:1
+bind = SUPER, 2, myplugin:2
 ```

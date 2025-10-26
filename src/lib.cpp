@@ -1,12 +1,12 @@
 #define WLR_USE_UNSTABLE
 
-#include "focusorlaunch.h"
+#include "myplugin.h"
 
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/desktop/Window.hpp>
 #include <hyprland/src/config/ConfigManager.hpp>
 
-EvenWindowsHasThis plugin;
+MyPlugin plugin;
 
 APICALL EXPORT std::string PLUGIN_API_VERSION() { return HYPRLAND_API_VERSION; }
 
@@ -17,19 +17,19 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle)
 	if (__hyprland_api_get_hash() != std::string_view(GIT_COMMIT_HASH)) {
 		HyprlandAPI::addNotification(
 		    PHANDLE,
-		    "[focusorlaunch] Failure in initialization: Version mismatch (headers ver != running ver)",
+		    "[myplugin] Failure in initialization: Version mismatch (headers ver != running ver)",
 		    CHyprColor{1.0, 0.2, 0.2, 1.0},
 		    5000
 		);
-		throw std::runtime_error("[focusorlaunch] version mismatch");
+		throw std::runtime_error("[myplugin] version mismatch");
 	}
 
 	for (int i = 0; i < NUM_QUICK_ACCESS_APPS; i++) {
 		HyprlandAPI::addConfigValue(
-		    PHANDLE, std::format("plugin:focusorlaunch:app_{}:class", i), Hyprlang::STRING{""}
+		    PHANDLE, std::format("plugin:myplugin:app_{}:class", i), Hyprlang::STRING{""}
 		);
 		HyprlandAPI::addConfigValue(
-		    PHANDLE, std::format("plugin:focusorlaunch:app_{}:command", i), Hyprlang::STRING{""}
+		    PHANDLE, std::format("plugin:myplugin:app_{}:command", i), Hyprlang::STRING{""}
 		);
 	}
 	HyprlandAPI::reloadConfig();
@@ -59,27 +59,31 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle)
 		success = success
 		          && HyprlandAPI::addDispatcherV2(
 		              PHANDLE,
-		              std::format("plugin:focusorlaunch:{}", i),
+		              std::format("myplugin:focusorexec:{}", i),
 		              [i](const std::string &) -> SDispatchResult {
-			              plugin.focus_or_launch(i);
+			              plugin.focus_or_exec(i);
 			              return {};
 		              }
 		          );
 	}
+	// TODO: Add dispatcher to:
+	//       1. Move floating window into a group in the given direction.
+	//       2. When no group in the direction given to moveintogroup, create a
+	//          group AND figure out how to get it on that direction.
 	if (!success) {
 		HyprlandAPI::addNotification(
 		    PHANDLE,
-		    "[focusorlaunch] Failed to register dispatchers",
+		    "[myplugin] Failed to register dispatchers",
 		    CHyprColor{1.0, 0.2, 0.2, 1.0},
 		    5000
 		);
-		throw std::runtime_error("[focusorlaunch] Failed to register dispatchers");
+		throw std::runtime_error("[myplugin] Failed to register dispatchers");
 	}
 
 	debug_notification("Initialized");
 
 	return {
-	    "focusorlaunch", "A dispatcher to focus or launch an app.", "Aditya Singh", "0.1"
+	    "myplugin", "My Hyprland plugin.", "Aditya Singh", "0.1"
 	};
 }
 

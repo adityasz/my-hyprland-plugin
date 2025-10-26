@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#define private public // CKeybindManager::{switchToWindow, spawn}
+#define private public // CKeybindManager::{switchToWindow, bringActiveToTop, spawn}
 #include <hyprlang.hpp>
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/plugins/PluginAPI.hpp>
@@ -55,9 +55,9 @@ struct MRUList {
 	}
 };
 
-class EvenWindowsHasThis {
-	/// Stores the app IDs and launch commands for quick access (e.g., with
-	/// super-number).
+class MyPlugin {
+	/// Stores the app IDs and launch commands for quick access
+	/// (e.g., with super-number).
 	std::array<QuickAccessApp, NUM_QUICK_ACCESS_APPS>           quick_access_apps;
 	/// Stores the window list for each tracked app ID.
 	std::unordered_map<std::string_view, MRUList<PHLWINDOWREF>> app_id_to_windows_map;
@@ -65,30 +65,41 @@ class EvenWindowsHasThis {
 public:
 	/// Note: Must call `EvenWindowsHasThis::load_config()` manually in the
 	/// plugin init function.
-	EvenWindowsHasThis() { seed_from_existing_windows(); }
+	MyPlugin() { seed_from_existing_windows(); }
 	/// Load configuration.
+	///
+	/// This is configured differently from the moveorexec dispatcher because
+	/// passing around strings and finding commas in them is a lot slower than
+	/// converting (usually just) one ascii character to an integer and using
+	/// that to index into an array.
 	void load_config();
 	/// Update a window's last used status.
 	void touch_window(const PHLWINDOW &window);
 	/// Remove a window.
 	void close_window(const PHLWINDOW &window);
 	/// Focus the last used window of the `n`-th quick access app or launch it.
-	void focus_or_launch(int n) const;
+	void focus_or_exec(int n) const;
 
 private:
 	/// Set state using currently open windows.
 	void seed_from_existing_windows();
 };
 
+#ifdef DEBUG_NOTIFICATIONS
 template <typename... Args>
 static void debug_notification(std::string_view fmt_string, Args &&...fmt_args)
 {
-#ifdef DEBUG
 	HyprlandAPI::addNotification(
 		PHANDLE,
-		std::format("[focusorlaunch] {}", std::vformat(fmt_string, std::make_format_args(fmt_args...))),
+		std::format("[m] {}", std::vformat(fmt_string, std::make_format_args(fmt_args...))),
 		CHyprColor{1.0, 0.2, 0.2, 1.0},
 		5000
 	);
-#endif
 }
+#else
+template <typename... Args>
+static void debug_notification(
+    [[maybe_unused]] std::string_view fmt_string, [[maybe_unused]] Args &&...fmt_args
+)
+{}
+#endif
