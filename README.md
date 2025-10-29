@@ -10,6 +10,7 @@
     and exec commands as arguments in the dispatcher? Because it takes more
     clock cycles to pass strings around and find delimiters in them than to look
     up arrays. Configuration is only loaded once.
+
     ```hyprlang
     plugin {
         myplugin {
