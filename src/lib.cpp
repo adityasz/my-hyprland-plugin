@@ -48,6 +48,17 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle)
 				plugin.close_window(window);
 	    }
 	);
+#ifdef GROUP_TILED_WINDOWS
+	// When the movewindoworgroup dispatcher is used to move a window out of a
+	// group that contains only two windows, the other window in that group is
+	// no longer in that group. So, windowUpdateRules has to be watched.
+	static auto PRules = HyprlandAPI::registerCallbackDynamic(
+	    PHANDLE, "windowUpdateRules", [&](void *, SCallbackInfo &, const std::any &data) {
+			if (auto window = std::any_cast<PHLWINDOW>(data))
+				plugin.window_update_rules(window);
+	    }
+	);
+#endif
 	static auto PConfig = HyprlandAPI::registerCallbackDynamic(
 	    PHANDLE, "configReloaded", [&](void *, SCallbackInfo &, const std::any &) {
 		    plugin.load_config();
@@ -66,10 +77,6 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle)
 		              }
 		          );
 	}
-	// TODO: Add dispatcher to:
-	//       1. Move floating window into a group in the given direction.
-	//       2. When no group in the direction given to moveintogroup, create a
-	//          group AND figure out how to get it on that direction.
 	if (!success) {
 		HyprlandAPI::addNotification(
 		    PHANDLE,

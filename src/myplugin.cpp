@@ -1,10 +1,10 @@
 #include "myplugin.h"
 #include <src/managers/KeybindManager.hpp>
-
+#include <src/managers/LayoutManager.hpp>
 
 void MyPlugin::touch_window(const PHLWINDOW &window)
 {
-	debug_notification("Touching window with class {}", window->m_class);
+	debug_notification("{}: TOUCH {}", window->m_isFloating, window->m_class);
 	auto it = app_id_to_windows_map.find(window->m_class);
 	if (it == app_id_to_windows_map.end())
 		return; // window of an untracked app
@@ -13,16 +13,25 @@ void MyPlugin::touch_window(const PHLWINDOW &window)
 
 void MyPlugin::close_window(const PHLWINDOW &window)
 {
-	debug_notification("Closing window with class {}", window->m_class);
+	debug_notification("CLOSE {}", window->m_class);
 	auto it = app_id_to_windows_map.find(window->m_class);
 	if (it == app_id_to_windows_map.end())
 		return; // window of an untracked app
 	it->second.erase(window);
 }
 
+void MyPlugin::window_update_rules(const PHLWINDOW &window)
+{
+	debug_notification("WINDOWRULES {}", window->m_class);
+	if (!window->m_isFloating && window->m_groupData.pNextWindow.expired())
+		window->createGroup();
+	if (window->m_isFloating && !window->m_groupData.pNextWindow.expired())
+		window->destroyGroup();
+}
+
 void MyPlugin::focus_or_exec(int n) const
 {
-	debug_notification("focus or exec {}", n);
+	debug_notification("FOCUSOREXEC {}", n);
 
 	if (quick_access_apps[n].app_id.empty() || quick_access_apps[n].command.empty()) {
 		debug_notification("OOB");
@@ -32,13 +41,10 @@ void MyPlugin::focus_or_exec(int n) const
 	if (auto window = app_id_to_windows_map.at(quick_access_apps[n].app_id).top()) {
 		debug_notification("Focusing {}", quick_access_apps[n].app_id);
 		g_pKeybindManager->switchToWindow(window->lock());
-		// FIXME(deprecated): Replace with alterZOrder (with the right arguments)
-		// FIXME: - (kitty, zed) in a group.
-		//        - zed focused.
-		//        - Focus zen in a scratch workspace.
-		//        - Focus kitty with keybind: zed still on top.
-		//        Groups are screwed up. Figure it out.
-		g_pKeybindManager->bringActiveToTop("");
+		if (!(*window)->m_groupData.pNextWindow.expired())
+			(*window)->setGroupCurrent(window->lock());
+		if ((*window)->m_isFloating)
+		    g_pCompositor->changeWindowZOrder(window->lock(), true);
 		return;
 	}
 

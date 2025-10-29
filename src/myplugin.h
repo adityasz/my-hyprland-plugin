@@ -3,6 +3,7 @@
 #include <any>
 #include <chrono>
 #include <algorithm>
+#include <hyprutils/math/Vector2D.hpp>
 #include <unordered_map>
 #include <string>
 #include <vector>
@@ -77,6 +78,9 @@ public:
 	void touch_window(const PHLWINDOW &window);
 	/// Remove a window.
 	void close_window(const PHLWINDOW &window);
+	/// Create a group if the window is tiled and not in a group.
+	/// Destroy the group if the window is floating and in a group.
+	void window_update_rules(const PHLWINDOW &window);
 	/// Focus the last used window of the `n`-th quick access app or launch it.
 	void focus_or_exec(int n) const;
 

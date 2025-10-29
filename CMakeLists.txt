@@ -15,8 +15,6 @@ file(GLOB_RECURSE SRC "src/*.cpp")
 
 add_library(myplugin SHARED ${SRC})
 
-option(DEBUG_NOTIFICATIONS "Show debug notficiations" OFF)
-
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(deps REQUIRED IMPORTED_TARGET
     hyprland
@@ -29,8 +27,15 @@ pkg_check_modules(deps REQUIRED IMPORTED_TARGET
     xkbcommon
 )
 target_link_libraries(myplugin PRIVATE rt PkgConfig::deps)
-if (DEBUG_NOTIFICATIONS)
-	target_compile_definitions(myplugin PRIVATE DEBUG_NOTIFICATIONS)
-endif ()
+
+function(add_compile_option name desc default)
+    option(${name} ${desc} ${default})
+    if(${name})
+        target_compile_definitions(myplugin PRIVATE ${name})
+    endif()
+endfunction()
+
+add_compile_option(DEBUG_NOTIFICATIONS "Show debug notifications" OFF)
+add_compile_option(GROUP_TILED_WINDOWS "Create a group when a window is tiled and not in a group" OFF)
 
 install(TARGETS myplugin)
