@@ -92,6 +92,19 @@ void MyPlugin::move_or_exec(int n) const
 	g_pKeybindManager->spawn(std::string(quick_access_apps[n].command));
 }
 
+void MyPlugin::exec(int n) const
+{
+	debug_notification("EXEC {}", n);
+
+	if (quick_access_apps[n].app_id.empty() || quick_access_apps[n].command.empty()) {
+		debug_notification("OOB");
+		return;
+	}
+
+	debug_notification("Executing {}", quick_access_apps[n].command);
+	g_pKeybindManager->spawn(std::string(quick_access_apps[n].command));
+}
+
 void MyPlugin::load_config()
 {
 	for (size_t i = 0; i < NUM_QUICK_ACCESS_APPS; i++) {

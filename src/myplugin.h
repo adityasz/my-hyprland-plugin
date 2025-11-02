@@ -84,6 +84,8 @@ public:
 	void focus_or_exec(int n) const;
 	/// Focus the last used window of the `n`-th quick access app after moving it to the current workspace if needed, or launch it.
 	void move_or_exec(int n) const;
+	/// Launch (a new window of) the `n`-th quick access app.
+	void exec(int n) const;
 
 private:
 	/// Set state using currently open windows.

@@ -1,34 +1,16 @@
 ## Features
 
-- `focusorexec`: A dispatcher to focus the last used window having the given
-  application ID, or execute a command if no window with that application ID
-  exists.
+- `focusorexec`: A dispatcher to focus the last used window of an app or launch
+  it.
 
-  <details>
-    <summary>Configuration</summary>
-    There can be up to 47 <i>quick access apps</i>. Why not take the app ID
-    and exec commands as arguments in the dispatcher? Because it takes more
-    clock cycles to pass strings around and find delimiters in them than to look
-    up arrays. Configuration is only loaded once.
+- `moveorexec`: A dispatcher to focus the last used window of an app, moving it
+  to the active workspace on the active monitor if needed, or launch it if there
+  is no window.
 
-    ```hyprlang
-    plugin {
-        myplugin {
-            app_1 {
-                class = kitty
-                command = kitty
-            }
-            app_2 {
-                class = zen
-                command = zen-browser
-            }
-        }
-    }
+  If the window is in a group on a different workspace, it is removed from that
+  group prior to being moved.
 
-    bind = SUPER, 1, myplugin:focusorexec:1
-    bind = SUPER, 2, myplugin:focusorexec:2
-    ```
-  </details>
+- `exec`: A dispatcher to launch (a new window of) an app.
 
 - Keep tiled windows grouped. (The `group set` window rule only works when the
   window is opened.)
@@ -44,6 +26,32 @@
     applies window rules. So, I simply destroy floating window groups whenever
     they are created.
   </details>
+
+# Configuration
+
+```hyprlang
+plugin {
+    myplugin {
+        app_1 {
+            class = kitty
+            command = kitty
+        }
+    }
+}
+
+bind = SUPER,       1, myplugin:focusorexec:1
+bind = SUPER SHIFT, 1, myplugin:moveorexec:1
+bind = SUPER CTRL,  1, myplugin:exec:1
+```
+
+<details>
+  <summary>Note</summary>
+  There can be up to 47 of these <i>quick access apps</i>. Why not take the app
+  ID and exec commands as arguments in the dispatchers? Because it takes more
+  clock cycles to pass strings around and process them than to index arrays.
+  Configuration is only loaded once. Also, the strings are shared here, so there
+  is no redundancy.
+</details>
 
 ## Installation
 

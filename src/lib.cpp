@@ -67,24 +67,20 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle)
 
 	bool success = true;
 	for (int i = 0; i < NUM_QUICK_ACCESS_APPS; i++) {
-		success = success
-		          && HyprlandAPI::addDispatcherV2(
-		              plugin.phandle,
-		              std::format("myplugin:focusorexec:{}", i),
-		              [i](const std::string &) -> SDispatchResult {
-			              plugin.focus_or_exec(i);
-			              return {};
-		              }
-		          );
-		success = success
-		          && HyprlandAPI::addDispatcherV2(
-		              plugin.phandle,
-		              std::format("myplugin:moveorexec:{}", i),
-		              [i](const std::string &) -> SDispatchResult {
-			              plugin.move_or_exec(i);
-			              return {};
-		              }
-		          );
+		for (const auto &[name, method] : {
+		         std::pair{"focusorexec", &decltype(plugin)::focus_or_exec},
+		         std::pair{"moveorexec",  &decltype(plugin)::move_or_exec },
+		         std::pair{"exec",        &decltype(plugin)::exec         }
+        }) {
+			success &= HyprlandAPI::addDispatcherV2(
+			    plugin.phandle,
+			    std::format("myplugin:{}:{}", name, i),
+			    [i, method](const std::string &) -> SDispatchResult {
+				    (plugin.*method)(i);
+				    return {};
+			    }
+			);
+		}
 	}
 	if (!success) {
 		HyprlandAPI::addNotification(
