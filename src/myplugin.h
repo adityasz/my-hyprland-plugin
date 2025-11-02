@@ -17,8 +17,6 @@
 #include <hyprland/src/helpers/Monitor.hpp>
 #undef private
 
-inline HANDLE PHANDLE = nullptr;
-
 static constexpr int NUM_QUICK_ACCESS_APPS = 47;
 
 struct QuickAccessApp {
@@ -64,6 +62,7 @@ class MyPlugin {
 	std::unordered_map<std::string_view, MRUList<PHLWINDOWREF>> app_id_to_windows_map;
 
 public:
+	HANDLE phandle = nullptr;
 	/// Note: Must call `EvenWindowsHasThis::load_config()` manually in the
 	/// plugin init function.
 	MyPlugin() { seed_from_existing_windows(); }
@@ -83,6 +82,8 @@ public:
 	void window_update_rules(const PHLWINDOW &window);
 	/// Focus the last used window of the `n`-th quick access app or launch it.
 	void focus_or_exec(int n) const;
+	/// Focus the last used window of the `n`-th quick access app after moving it to the current workspace if needed, or launch it.
+	void move_or_exec(int n) const;
 
 private:
 	/// Set state using currently open windows.

@@ -12,11 +12,11 @@ APICALL EXPORT std::string PLUGIN_API_VERSION() { return HYPRLAND_API_VERSION; }
 
 APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle)
 {
-	PHANDLE = handle;
+	plugin.phandle = handle;
 
 	if (__hyprland_api_get_hash() != std::string_view(GIT_COMMIT_HASH)) {
 		HyprlandAPI::addNotification(
-		    PHANDLE,
+		    plugin.phandle,
 		    "[myplugin] Failure in initialization: Version mismatch (headers ver != running ver)",
 		    CHyprColor{1.0, 0.2, 0.2, 1.0},
 		    5000
@@ -26,24 +26,24 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle)
 
 	for (int i = 0; i < NUM_QUICK_ACCESS_APPS; i++) {
 		HyprlandAPI::addConfigValue(
-		    PHANDLE, std::format("plugin:myplugin:app_{}:class", i), Hyprlang::STRING{""}
+		    plugin.phandle, std::format("plugin:myplugin:app_{}:class", i), Hyprlang::STRING{""}
 		);
 		HyprlandAPI::addConfigValue(
-		    PHANDLE, std::format("plugin:myplugin:app_{}:command", i), Hyprlang::STRING{""}
+		    plugin.phandle, std::format("plugin:myplugin:app_{}:command", i), Hyprlang::STRING{""}
 		);
 	}
 	HyprlandAPI::reloadConfig();
 	plugin.load_config();
 
 	static auto PActive = HyprlandAPI::registerCallbackDynamic(
-	    PHANDLE, "activeWindow", [&](void *, SCallbackInfo &, const std::any &data) {
+	    plugin.phandle, "activeWindow", [&](void *, SCallbackInfo &, const std::any &data) {
 	    	// Hyprland calls activeWindow with nullptr when switching workspaces
 	    	if (auto window = std::any_cast<PHLWINDOW>(data))
 				plugin.touch_window(window);
 		}
 	);
 	static auto PClose = HyprlandAPI::registerCallbackDynamic(
-	    PHANDLE, "closeWindow", [&](void *, SCallbackInfo &, const std::any &data) {
+	    plugin.phandle, "closeWindow", [&](void *, SCallbackInfo &, const std::any &data) {
 			if (auto window = std::any_cast<PHLWINDOW>(data))
 				plugin.close_window(window);
 	    }
@@ -53,14 +53,14 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle)
 	// group that contains only two windows, the other window in that group is
 	// no longer in that group. So, windowUpdateRules has to be watched.
 	static auto PRules = HyprlandAPI::registerCallbackDynamic(
-	    PHANDLE, "windowUpdateRules", [&](void *, SCallbackInfo &, const std::any &data) {
+	    plugin.phandle, "windowUpdateRules", [&](void *, SCallbackInfo &, const std::any &data) {
 			if (auto window = std::any_cast<PHLWINDOW>(data))
 				plugin.window_update_rules(window);
 	    }
 	);
 #endif
 	static auto PConfig = HyprlandAPI::registerCallbackDynamic(
-	    PHANDLE, "configReloaded", [&](void *, SCallbackInfo &, const std::any &) {
+	    plugin.phandle, "configReloaded", [&](void *, SCallbackInfo &, const std::any &) {
 		    plugin.load_config();
 	    }
 	);
@@ -69,17 +69,26 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle)
 	for (int i = 0; i < NUM_QUICK_ACCESS_APPS; i++) {
 		success = success
 		          && HyprlandAPI::addDispatcherV2(
-		              PHANDLE,
+		              plugin.phandle,
 		              std::format("myplugin:focusorexec:{}", i),
 		              [i](const std::string &) -> SDispatchResult {
 			              plugin.focus_or_exec(i);
 			              return {};
 		              }
 		          );
+		success = success
+		          && HyprlandAPI::addDispatcherV2(
+		              plugin.phandle,
+		              std::format("myplugin:moveorexec:{}", i),
+		              [i](const std::string &) -> SDispatchResult {
+			              plugin.move_or_exec(i);
+			              return {};
+		              }
+		          );
 	}
 	if (!success) {
 		HyprlandAPI::addNotification(
-		    PHANDLE,
+		    plugin.phandle,
 		    "[myplugin] Failed to register dispatchers",
 		    CHyprColor{1.0, 0.2, 0.2, 1.0},
 		    5000
