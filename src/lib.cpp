@@ -37,25 +37,25 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle)
 
 	static auto PActive = HyprlandAPI::registerCallbackDynamic(
 	    plugin.phandle, "activeWindow", [&](void *, SCallbackInfo &, const std::any &data) {
-	    	// Hyprland calls activeWindow with nullptr when switching workspaces
-	    	if (auto window = std::any_cast<PHLWINDOW>(data))
-				plugin.touch_window(window);
-		}
+		    // Hyprland calls activeWindow with nullptr when switching workspaces
+		    if (auto window = std::any_cast<PHLWINDOW>(data))
+			    plugin.touch_window(window);
+	    }
 	);
 	static auto PClose = HyprlandAPI::registerCallbackDynamic(
 	    plugin.phandle, "closeWindow", [&](void *, SCallbackInfo &, const std::any &data) {
-			if (auto window = std::any_cast<PHLWINDOW>(data))
-				plugin.close_window(window);
+		    if (auto window = std::any_cast<PHLWINDOW>(data))
+			    plugin.close_window(window);
 	    }
 	);
-#ifdef GROUP_TILED_WINDOWS
+#ifdef TILES_ARE_GROUPS
 	// When the movewindoworgroup dispatcher is used to move a window out of a
 	// group that contains only two windows, the other window in that group is
 	// no longer in that group. So, windowUpdateRules has to be watched.
 	static auto PRules = HyprlandAPI::registerCallbackDynamic(
 	    plugin.phandle, "windowUpdateRules", [&](void *, SCallbackInfo &, const std::any &data) {
-			if (auto window = std::any_cast<PHLWINDOW>(data))
-				plugin.window_update_rules(window);
+		    if (auto window = std::any_cast<PHLWINDOW>(data))
+			    plugin.window_update_rules(window);
 	    }
 	);
 #endif
@@ -66,21 +66,21 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle)
 	);
 
 	bool success = true;
-	for (int i = 0; i < NUM_QUICK_ACCESS_APPS; i++) {
-		for (const auto &[name, method] : {
-		         std::pair{"focusorexec", &decltype(plugin)::focus_or_exec},
-		         std::pair{"moveorexec",  &decltype(plugin)::move_or_exec },
-		         std::pair{"exec",        &decltype(plugin)::exec         }
-        }) {
-			success &= HyprlandAPI::addDispatcherV2(
-			    plugin.phandle,
-			    std::format("myplugin:{}:{}", name, i),
-			    [i, method](const std::string &) -> SDispatchResult {
-				    (plugin.*method)(i);
-				    return {};
-			    }
-			);
-		}
+	for (const auto &[name, method] : {
+	         std::pair{"exec",                &decltype(plugin)::exec                   },
+	         std::pair{"focusorexec",         &decltype(plugin)::focus_or_exec          },
+	         std::pair{"moveorexec",          &decltype(plugin)::move_or_exec           },
+#ifdef TILES_ARE_GROUPS
+	         std::pair{"moveintogrouporexec", &decltype(plugin)::move_into_group_or_exec},
+#endif
+    }) {
+		success &= HyprlandAPI::addDispatcherV2(
+		    plugin.phandle,
+		    std::format("myplugin:{}", name),
+		    [method](const std::string &arg) -> SDispatchResult {
+			    return (plugin.*method)(std::stoi(arg));
+		    }
+		);
 	}
 	if (!success) {
 		HyprlandAPI::addNotification(
@@ -92,11 +92,9 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle)
 		throw std::runtime_error("[myplugin] Failed to register dispatchers");
 	}
 
-	debug_notification("Initialized");
+	log(INFO, "initialized");
 
-	return {
-	    "myplugin", "My Hyprland plugin.", "Aditya Singh", "0.1"
-	};
+	return {"myplugin", "My Hyprland plugin.", "Aditya Singh", "0.1"};
 }
 
 APICALL EXPORT void PLUGIN_EXIT() {}

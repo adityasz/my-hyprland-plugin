@@ -4,6 +4,8 @@
 #include <chrono>
 #include <algorithm>
 #include <hyprutils/math/Vector2D.hpp>
+#include <src/SharedDefs.hpp>
+#include <src/debug/Log.hpp>
 #include <unordered_map>
 #include <string>
 #include <vector>
@@ -63,9 +65,11 @@ class MyPlugin {
 
 public:
 	HANDLE phandle = nullptr;
+
 	/// Note: Must call `EvenWindowsHasThis::load_config()` manually in the
 	/// plugin init function.
 	MyPlugin() { seed_from_existing_windows(); }
+
 	/// Load configuration.
 	///
 	/// This is configured differently from the moveorexec dispatcher because
@@ -73,40 +77,42 @@ public:
 	/// converting (usually just) one ascii character to an integer and using
 	/// that to index into an array.
 	void load_config();
+
 	/// Update a window's last used status.
-	void touch_window(const PHLWINDOW &window);
+	void        touch_window(const PHLWINDOW &window);
 	/// Remove a window.
-	void close_window(const PHLWINDOW &window);
+	void        close_window(const PHLWINDOW &window);
 	/// Create a group if the window is tiled and not in a group.
 	/// Destroy the group if the window is floating and in a group.
-	void window_update_rules(const PHLWINDOW &window);
-	/// Focus the last used window of the `n`-th quick access app or launch it.
-	void focus_or_exec(int n) const;
-	/// Focus the last used window of the `n`-th quick access app after moving it to the current workspace if needed, or launch it.
-	void move_or_exec(int n) const;
+	static void window_update_rules(const PHLWINDOW &window);
+
 	/// Launch (a new window of) the `n`-th quick access app.
-	void exec(int n) const;
+	SDispatchResult exec(int n) const;
+	/// Focus the last used window of the `n`-th quick access app or launch it.
+	SDispatchResult focus_or_exec(int n) const;
+	/// Focus the last used window of the `n`-th quick access app after moving it to the current workspace if needed, or launch it.
+	SDispatchResult move_or_exec(int n) const;
+#ifdef TILES_ARE_GROUPS
+	/// Focus the last used window of the `n`-th quick access app after inserting it into the current group, or launch it.
+	SDispatchResult        move_into_group_or_exec(int n) const;
+#endif
 
 private:
 	/// Set state using currently open windows.
 	void seed_from_existing_windows();
 };
 
-#ifdef DEBUG_NOTIFICATIONS
+#ifdef DEBUG_LOGS
 template <typename... Args>
-static void debug_notification(std::string_view fmt_string, Args &&...fmt_args)
+static void log(eLogLevel level, std::format_string<Args...> fmt_string, Args &&...fmt_args)
 {
-	HyprlandAPI::addNotification(
-		PHANDLE,
-		std::format("[m] {}", std::vformat(fmt_string, std::make_format_args(fmt_args...))),
-		CHyprColor{1.0, 0.2, 0.2, 1.0},
-		5000
-	);
+	Debug::log(level, "[myplugin] {}", std::format(fmt_string, std::forward<Args>(fmt_args)...));
 }
 #else
 template <typename... Args>
-static void debug_notification(
-    [[maybe_unused]] std::string_view fmt_string, [[maybe_unused]] Args &&...fmt_args
-)
+static void
+log([[maybe_unused]] eLogLevel                   level,
+    [[maybe_unused]] std::format_string<Args...> fmt,
+    [[maybe_unused]] Args &&...fmt_args)
 {}
 #endif

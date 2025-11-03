@@ -35,7 +35,7 @@ function(add_compile_option name desc default)
     endif()
 endfunction()
 
-add_compile_option(DEBUG_NOTIFICATIONS "Show debug notifications" OFF)
-add_compile_option(GROUP_TILED_WINDOWS "Create a group when a window is tiled and not in a group" OFF)
+add_compile_option(DEBUG_LOGS "Logs for debugging" OFF)
+add_compile_option(TILES_ARE_GROUPS "All tiles are groups, i.e., all tiled windows are grouped" OFF)
 
 install(TARGETS myplugin)

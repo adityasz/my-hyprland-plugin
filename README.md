@@ -15,7 +15,7 @@
 - Keep tiled windows grouped. (The `group set` window rule only works when the
   window is opened.)
 
-  To enable this, generate the build sytem with `-DGROUP_TILED_WINDOWS=ON`.
+  To enable this, generate the build sytem with `-DTILES_ARE_GROUPS=ON`.
 
   <details>
     <summary>This also destroys groups of floating windows.</summary>
@@ -27,31 +27,36 @@
     they are created.
   </details>
 
+- `moveintogrouporexec`: Available when `TILES_ARE_GROUPS=ON`. Similar to
+  `moveorexec`, but inserts into the current group if possible.
+
 # Configuration
 
 ```hyprlang
 plugin {
     myplugin {
-        app_1 {
+        app_0 {
             class = kitty
             command = kitty
+        }
+        app_1 {
+            class = org.kde.dolphin
+            command = dolphin
         }
     }
 }
 
-bind = SUPER,       1, myplugin:focusorexec:1
-bind = SUPER SHIFT, 1, myplugin:moveorexec:1
-bind = SUPER CTRL,  1, myplugin:exec:1
+bind = SUPER,       0, myplugin:focusorexec, 0
+bind = SUPER SHIFT, 0, myplugin:moveorexec,  0
+bind = SUPER CTRL,  0, myplugin:exec,        0
+bind = SUPER,       1, myplugin:focusorexec, 1
+bind = SUPER SHIFT, 1, myplugin:moveorexec,  1
+bind = SUPER CTRL,  1, myplugin:exec,        1
 ```
 
-<details>
-  <summary>Note</summary>
-  There can be up to 47 of these <i>quick access apps</i>. Why not take the app
-  ID and exec commands as arguments in the dispatchers? Because it takes more
-  clock cycles to pass strings around and process them than to index arrays.
-  Configuration is only loaded once. Also, the strings are shared here, so there
-  is no redundancy.
-</details>
+> [!NOTE]
+>
+> There can be up to 47 of these *quick access apps*.
 
 ## Installation
 
@@ -60,7 +65,9 @@ Hyprland headers need to be installed. See
 for the full list of dependencies.
 
 ```console
-$ cmake -B build/release -S . -GNinja -DCMAKE_BUILD_TYPE=Release [-DGROUP_TILED_WINDOWS=<ON|OFF*>]
+$ cmake -B build/release -S . -GNinja -DCMAKE_BUILD_TYPE=Release [-DTILES_ARE_GROUPS=<ON|OFF*>]
 $ cmake --build build/release
 $ hyprctl plugin load $(realpath build/release/libmyplugin.so)
 ```
+
+Debug logs can be enabled with `-DDEBUG_LOGS=ON`.
