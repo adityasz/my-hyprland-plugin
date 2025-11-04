@@ -134,8 +134,12 @@ SDispatchResult MyPlugin::move_into_group_or_exec(int n) const
 	auto active_window = g_pCompositor->m_lastWindow.lock();
 	auto window =
 	    app_id_to_windows_map.at(quick_access_apps[n].app_id).top().value_or(PHLWINDOWREF{}).lock();
+
 	if (!active_window || active_window->m_isFloating || !window || window->m_isFloating)
 		return move_or_exec(n);
+
+	if (window == active_window)
+		return {};
 
 	// window is tiled and grouped
 	log(INFO, "moving and focusing {}", quick_access_apps[n].app_id);
